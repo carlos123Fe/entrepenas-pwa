@@ -170,4 +170,145 @@ const MONTHS = [
   { title:"📅 AGOSTO (calor)", rows:[
     ["🎣 Black Bass","🟡 Media","top al amanecer"],
     ["🐟 Perca europea","🟡 Media","1–4 m"],
-    ["🐟 Lucioperca","🟡 Media","4–8 m (noc
+    ["🐟 Lucioperca","🟡 Media","4–8 m (noc], lures:["• Popper/Buzz según viento","• Shad nocturno","• Texas anti-hierba"]},
+
+  { title:"📅 SEPTIEMBRE (transición)", rows:[
+    ["🎣 Black Bass","🔥 Alta","0.5–4 m"],
+    ["🐟 Perca europea","🔥 Alta","1–4 m"],
+    ["🐊 Lucio","🔥 Alta","2–6 m"],
+    ["🐟 Lucioperca","🟡 Media","4–8 m"],
+    ["🐠 Barbo","🟡 Media","1–3 m"],
+  ], lures:["• Crank medio","• Spinner 14–21 g","• Wacky/Neko"]},
+
+  { title:"📅 OCTUBRE (feeding time)", rows:[
+    ["🎣 Black Bass","🔥 Alta","2–6 m"],
+    ["🐊 Lucio","🔥 Alta","2–8 m"],
+    ["🐟 Lucioperca","🔥 Alta","6–12 m"],
+    ["🐟 Perca europea","🔥 Alta","2–5 m"],
+    ["🐠 Barbo","🟡 Media","2–5 m"],
+  ], lures:["• Swimbait 12–14","• Crank 6–8 cm","• Texas 7–12 g"]},
+
+  { title:"📅 NOVIEMBRE (bajan temperaturas)", rows:[
+    ["🐟 Lucioperca","🔥 Alta","6–12 m"],
+    ["🐟 Perca europea","🔥 Alta","4–8 m"],
+    ["🐊 Lucio","🟡 Media","3–7 m"],
+    ["🎣 Black Bass","🔴 Baja","4–8 m"],
+    ["🐠 Barbo","🔴 Baja","3–8 m"],
+  ], lures:["• Jig + shad","• Carolina 10–15 g","• Jerk suspending"]},
+
+  { title:"📅 DICIEMBRE (inicio del frío)", rows:[
+    ["🐟 Lucioperca","🔥🔥 Alta","8–12 m"],
+    ["🐟 Perca europea","🔥 Alta","5–9 m"],
+    ["🐊 Lucio","🟡 Media","3–6 m"],
+    ["🎣 Black Bass","🔴 Baja","4–8 m"],
+    ["🐠 Barbo","🔴 Baja","3–8 m"],
+  ], lures:["• Jig + shad natural","• Carolina 10–15 g","• Swimbait lento"]}
+];
+
+/* ==========================
+   TABLA DE DECISIÓN
+   ========================== */
+const DECISION = [
+  ["Condición","Señuelo","Color","Especies"],
+  ["Amanecer/ocaso","Top 9–11 cm","Blanco/Perla","Bass,Perca,Barbo"],
+  ["Viento suave","Spinner/Crank","Chartreuse/Verde","Bass,Lucio"],
+  ["Agua clara","Jerk/Shad","Perla/Ayu","Bass,Zander"],
+  ["Fondo","Jig+Shad 12–20 g","Naturales","Zander,Barbo"],
+  ["Bait en medias","Shad 9–10 lineal","Perla+glitter","Zander,Lucio"]
+];
+
+/* ==========================
+   MOTOR DE RENDER
+   ========================== */
+const $app = document.getElementById("app");
+const $modeSel = document.getElementById("modeSel");
+const savedMode = localStorage.getItem("mode") || "A1";
+$modeSel.value = savedMode;
+
+function render(){
+  const MODE = $modeSel.value;
+  localStorage.setItem("mode", MODE);
+  $app.innerHTML = "";
+
+  MONTHS.forEach(m => {
+    const $card = document.createElement("section");
+    $card.className = "month";
+
+    const $tit = document.createElement("div");
+    $tit.className = "mtitle";
+    $tit.innerHTML = `<h2>${m.title}</h2>`;
+    $card.appendChild($tit);
+
+    const $tbl = document.createElement("table");
+    $tbl.className = "tbl";
+    $tbl.innerHTML = `
+      <thead><tr><th>Especie</th><th>Actividad</th><th>Prof.</th></tr></thead>
+      <tbody>
+        ${m.rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}
+      </tbody>
+    `;
+    $card.appendChild($tbl);
+
+    if(MODE !== "A2"){
+      const $l = document.createElement("div");
+      $l.className = "lures";
+      $l.innerHTML =
+        `<h3>🎣 Señuelos clave</h3>` +
+        m.lures.map(x => `<span class="chip">${x}</span>`).join("");
+      $card.appendChild($l);
+    }
+
+    $app.appendChild($card);
+  });
+
+  if(MODE === "A3"){
+    const $d = document.createElement("section");
+    $d.className = "decision";
+
+    $d.innerHTML = `
+      <div class="mtitle"><h2>⚡ Tabla de decisión rápida</h2></div>
+      <table class="tbl">
+        <thead><tr>${DECISION[0].map(h => `<th>${h}</th>`).join("")}</tr></thead>
+        <tbody>
+          ${DECISION.slice(1).map(r =>
+            `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`
+          ).join("")}
+        </tbody>
+      </table>
+      <div class="hint">Usa esta guía según luz, viento y actividad.</div>
+    `;
+    $app.appendChild($d);
+  }
+}
+$modeSel.addEventListener("change", render);
+render();
+
+/* ==========================
+   INSTALACIÓN PWA
+   ========================== */
+let deferredPrompt;
+const $install = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", e=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  $install.classList.remove("hidden");
+});
+
+$install.addEventListener("click", async ()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  $install.classList.add("hidden");
+});
+
+/* ==========================
+   SERVICE WORKER
+   ========================== */
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./service-worker.js");
+}
+</script>
+</body>
+</html>
