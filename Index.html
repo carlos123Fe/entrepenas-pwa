@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Entrepeñas · Mes a Mes (Dark)</title>
+  manifest.webmanifest
+  <meta name="theme-color" content="#000000" />
+  <style>
+    :root{
+      --bg:#000; --fg:#f5f7fa; --muted:#cbd5e1; --line:#222;
+      --accent:#38bdf8; --chip:#020508; --card:#070a0f;
+      --fg-strong:#ffffff; --corner:14px;
+    }
+    * { box-sizing:border-box }
+    html,body {
+      margin:0; height:100%;
+      background:#000; color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif
+    }
+    header {
+      position:sticky; top:0;
+      background:rgba(0,0,0,.9);
+      backdrop-filter:blur(6px);
+      border-bottom:1px solid var(--line);
+      padding:12px 16px;
+      display:flex; gap:10px; align-items:center;
+      z-index:5;
+    }
+    header h1 {
+      font-size:18px; margin:0; font-weight:700; color:var(--fg-strong)
+    }
+    .mode {
+      margin-left:auto; display:flex; gap:8px; align-items:center;
+    }
+    select,button {
+      background:#0b1220; color:var(--fg);
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:14px;
+    }
+    main { padding:14px; max-width:640px; margin:0 auto }
+    .month {
+      margin:16px 0;
+      border:1px solid var(--line);
+      border-radius:var(--corner);
+      background:var(--card);
+    }
+    .mtitle {
+      display:flex; align-items:center; gap:10px;
+      padding:12px 14px;
+      border-bottom:1px solid var(--line)
+    }
+    .mtitle h2 { margin:0; font-size:16px; color:var(--fg-strong) }
+    .tbl { width:100%; border-collapse:collapse }
+    .tbl th,.tbl td {
+      border:1px solid var(--line);
+      padding:10px 8px; font-size:14px;
+    }
+    .tbl th { background:#0c1118; color:var(--accent); text-align:left }
+    .tbl td { background:#000 }
+    .lures {
+      padding:10px 12px;
+      border-top:1px solid var(--line);
+      background:#000
+    }
+    .lures h3 { margin:0 0 8px 0; font-size:14px; color:var(--accent) }
+    .chip {
+      display:block;
+      background:var(--chip);
+      color:var(--fg);
+      border:1px solid #152232;
+      border-radius:10px;
+      padding:8px 10px;
+      margin:6px 0;
+      font-size:13px;
+    }
+    .decision {
+      margin:18px 0;
+      border:1px solid var(--line);
+      border-radius:var(--corner);
+      overflow:hidden;
+      background:var(--card)
+    }
+    .hint { color:var(--muted); font-size:12px; padding:0 2px 12px }
+    .foot { padding:16px; color:var(--muted); font-size:12px; text-align:center }
+    .hidden { display:none }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>📅 Entrepeñas · Mes a Mes</h1>
+    <div class="mode">
+      <label for="modeSel" style="font-size:12px;color:var(--muted)">Modo</label>
+      <select id="modeSel">
+        <option value="A1">A1 · Meses + Señuelos</option>
+        <option value="A2">A2 · Solo Meses</option>
+        <option value="A3">A3 · Meses + Tabla decisión</option>
+      </select>
+      <button id="installBtn" class="hidden">Instalar</button>
+    </div>
+  </header>
+
+  <main id="app"></main>
+  <div class="foot">Modo oscuro estilo chat · Funciona offline</div>
+
+<script>
+/* ===========================================================
+   DATOS: 12 MESES + SEÑUELOS + TABLA DECISIÓN
+   =========================================================== */
+const MONTHS = [
+  { title:"📅 ENERO (el mes más duro)", rows:[
+    ["🐟 Lucioperca","🔥🔥 Máxima","10–15 m"],
+    ["🐟 Perca europea","🔥 Alta","6–10 m"],
+    ["🐊 Lucio","🟡 Media","4–8 m"],
+    ["🎣 Black Bass","🔴 Muy baja","5–10 m"],
+    ["🐠 Barbo","🔴 Muy baja","5–12 m"],
+  ], lures:["• Shad 3–4\" pesado","• Jerkbait pausado","• Jig profundo"]},
+
+  { title:"📅 FEBRERO (final del frío)", rows:[
+    ["🐟 Lucioperca","🔥 Alta","8–12 m"],
+    ["🐊 Lucio","🔥 Alta","3–7 m"],
+    ["🐟 Perca europea","🟡 Media","4–7 m"],
+    ["🎣 Black Bass","🟡 Baja-media","3–6 m"],
+    ["🐠 Barbo","🟡 Media","3–6 m"],
+  ], lures:["• Swimbait 12–14 cm","• Jerk suspending","• Crank medio"]},
+
+  { title:"📅 MARZO (prepre-spawn)", rows:[
+    ["🎣 Black Bass","🔥🔥 Alta","2–5 m"],
+    ["🐊 Lucio","🔥 Alta","2–6 m"],
+    ["🐟 Perca europea","🔥 Alta","3–6 m"],
+    ["🐟 Lucioperca","🟡 Media","6–10 m"],
+    ["🐠 Barbo","🟡 Media","2–5 m"],
+  ], lures:["• Spinnerbait","• Texas ligero","• Jerkbait 11 cm"]},
+
+  { title:"📅 ABRIL (pleno movimiento)", rows:[
+    ["🎣 Black Bass","🔥🔥 Máxima","0.5–3 m"],
+    ["🐊 Lucio","🔥 Alta","2–5 m"],
+    ["🐟 Perca europea","🔥 Alta","2–4 m"],
+    ["🐠 Barbo","🔥 Alta","1–4 m"],
+    ["🐟 Lucioperca","🟡 Media","5–9 m"],
+  ], lures:["• Texas/creature","• Wacky/Neko","• Spinnerbait"]},
+
+  { title:"📅 MAYO (post-spawn)", rows:[
+    ["🎣 Black Bass","🔥 Alta","1–4 m"],
+    ["🐟 Perca europea","🔥 Alta","2–4 m"],
+    ["🐠 Barbo","🔥 Alta","1–3 m"],
+    ["🐊 Lucio","🟡 Media","3–6 m"],
+    ["🐟 Lucioperca","🟡 Media","6–10 m"],
+  ], lures:["• Topwater","• Jig ligero","• Crank shallow"]},
+
+  { title:"📅 JUNIO (termoclina)", rows:[
+    ["🎣 Black Bass","🔥 Alta","1–5 m"],
+    ["🐟 Perca europea","🔥 Alta","2–6 m"],
+    ["🐟 Lucioperca","🟡 Media","4–9 m"],
+    ["🐊 Lucio","🟡 Media","2–6 m"],
+    ["🐠 Barbo","🟡 Media","1–4 m"],
+  ], lures:["• Top al alba","• Shad 9–10","• Ned 3–5 g"]},
+
+  { title:"📅 JULIO (verano pleno)", rows:[
+    ["🎣 Black Bass","🟡 Media","0.5–4 m al alba, 3–7 m resto"],
+    ["🐟 Perca europea","🟡 Media","0.5–4 m"],
+    ["🐟 Lucioperca","🟡 Media","4–9 m"],
+    ["🐊 Lucio","🟡 Media","somero con sombra"],
+    ["🐠 Barbo","🟡 Media","1–4 m"],
+  ], lures:["• Paseante","• Shad sobre termoclina","• Micro-spinner"]},
+
+  { title:"📅 AGOSTO (calor)", rows:[
+    ["🎣 Black Bass","🟡 Media","top al amanecer"],
+    ["🐟 Perca europea","🟡 Media","1–4 m"],
+    ["🐟 Lucioperca","🟡 Media","4–8 m (noc
